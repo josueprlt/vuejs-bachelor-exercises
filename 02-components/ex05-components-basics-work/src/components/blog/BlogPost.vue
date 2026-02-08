@@ -1,18 +1,17 @@
 <template>
   <article class="blog-card">
     <div class="card-image">
-      <img src="https://proedu.com/cdn/shop/articles/What-Is-Post-Processing-Fundamentals-Blog-PRO-EDU.jpg?v=1704899902&width=1500" alt="Image de post">
-      <div class="card-date">8 Fév 2026</div>
+      <img :src="imgUrl" :alt="imgAlt">
     </div>
     <div class="card-content">
-      <span class="card-category">Technologie</span>
-      <h2 class="card-title">Titre du post</h2>
-      <p class="card-description">Ceci est un court extrait du contenu du post pour donner envie de lire la suite...</p>
-      
+      <span class="card-category">{{ theme }}</span>
+      <h2 class="card-title">{{ title }}</h2>
+      <p class="card-description">{{ description }}</p>
+
       <div class="card-footer">
         <div class="author-info">
-          <div class="author-avatar">JD</div>
-          <p class="author-name">Par John Doe</p>
+          <div class="author-avatar">{{ initial }}</div>
+          <p class="author-name">Par {{ author }}</p>
         </div>
         <button class="btn-more">Voir plus</button>
       </div>
@@ -21,6 +20,28 @@
 </template>
 
 <script setup>
+import {onMounted, ref} from "vue";
+
+const initial = ref('');
+
+const props = defineProps({
+  title: String,
+  description: String,
+  theme: String,
+  author: String,
+  imgUrl: String,
+  imgAlt: String
+})
+
+onMounted(() => {
+  const recupWords = props.author.split(' ');
+  const firstWord = recupWords[0].substring(0, 1).toUpperCase();
+  let secondWord = '';
+  if (recupWords[1]) {
+    secondWord = recupWords[1].substring(0, 1).toUpperCase();
+  }
+  initial.value = firstWord + secondWord;
+})
 </script>
 
 <style scoped>
