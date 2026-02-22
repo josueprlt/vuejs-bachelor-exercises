@@ -1,289 +1,333 @@
 <template>
-  <div class="app">
-    <header class="app-header">
-      <div class="app-header__inner">
-        <h1 class="app-title">Task Manager</h1>
-        <p class="app-subtitle">Simple, clean, modern.</p>
-      </div>
+  <div class="container">
+    <header class="hero">
+      <h1 class="hero__title">Slots Demo</h1>
+      <p class="hero__subtitle">
+        Default slots, named slots, scoped slots, fallback content — le tout en mode “Vue moderne”.
+      </p>
+      <p class="hero__hint">
+        Astuce : essaie de supprimer certains <span class="kbd">#header</span> / <span class="kbd">#footer</span> pour voir les fallbacks.
+      </p>
     </header>
 
-    <main class="app-main">
-      <section class="card">
-        <AddTask @add-task="addTask" />
+    <PageLayout>
+      <template #header>
+        <div class="topbar">
+          <strong>Component Library</strong>
+          <span class="muted">Exercise 08</span>
+        </div>
+      </template>
+
+      <template #sidebar>
+        <nav class="nav">
+          <a href="#cards">Cards</a>
+          <a href="#users">UserList</a>
+          <a href="#tabs">Tabs</a>
+          <a href="#alerts">Alerts</a>
+          <a href="#table">DataTable</a>
+          <a href="#modal">Modal</a>
+        </nav>
+      </template>
+
+      <section id="cards" class="stack">
+        <h2 class="section-title">Cards</h2>
+
+        <BaseCard>
+          <p>Contenu custom via <strong>default slot</strong>.</p>
+        </BaseCard>
+
+        <Card>
+          <template #header>
+            <h3 class="h3">Mon header custom</h3>
+          </template>
+
+          <p>Contenu principal dans le slot par défaut.</p>
+
+          <template #footer>
+            <button class="btn">Action</button>
+            <button class="btn btn--ghost">Cancel</button>
+          </template>
+        </Card>
       </section>
 
-      <section class="card card--filters">
-        <div class="filters">
-          <SearchFilter v-model="searchQuery" />
-          <StatusFilter @filter-change="handleFilterChange" />
-        </div>
+      <section id="users" class="stack">
+        <h2 class="section-title">UserList (scoped slot)</h2>
 
-        <div class="task-stats">
-          <div class="stat">
-            <div class="stat__label">Total</div>
-            <div class="stat__value">{{ tasks.length }}</div>
-          </div>
-          <div class="stat">
-            <div class="stat__label">Active</div>
-            <div class="stat__value">{{ activeTasks }}</div>
-          </div>
-          <div class="stat">
-            <div class="stat__label">Completed</div>
-            <div class="stat__value">{{ completedTasks }}</div>
-          </div>
-        </div>
+        <UserList :users="users">
+          <template #default="{ user, index }">
+            <div class="user-custom">
+              <span class="index">{{ index + 1 }}.</span>
+              <img class="avatar" :src="user.avatar" :alt="user.name">
+              <div class="meta">
+                <div class="name">{{ user.name }}</div>
+                <div class="role">{{ user.role }}</div>
+              </div>
+              <button class="btn btn--ghost" type="button" @click="editUser(user)">Edit</button>
+            </div>
+          </template>
+        </UserList>
       </section>
 
-      <section class="task-list">
-        <TaskItem
-            v-for="task in filteredTasks"
-            :key="task.id"
-            :task="task"
-            @toggle-complete="toggleComplete"
-            @edit="editTask"
-            @delete="deleteTask"
-        />
+      <section id="tabs" class="stack">
+        <h2 class="section-title">Tabs</h2>
 
-        <div v-if="filteredTasks.length === 0" class="empty-state">
-          <h3 class="empty-state__title">Aucune tâche</h3>
-          <p class="empty-state__text">Essayez de modifier la recherche ou le filtre.</p>
-        </div>
+        <TabContainer v-model="activeTab">
+          <template #label-Overview>Vue vibe</template>
+          <template #label-Details>Détails</template>
+          <template #label-API>API</template>
+
+          <TabItem name="Overview" :active-name="activeTab">
+            <p class="muted">Labels via named slots: <span class="kbd">#label-Overview</span>, etc.</p>
+          </TabItem>
+
+          <TabItem name="Details" :active-name="activeTab">
+            <p>Les <strong>TabItem</strong> passent juste le contenu via slot.</p>
+          </TabItem>
+
+          <TabItem name="API" :active-name="activeTab">
+            <p class="muted">Tu pourrais ajouter des props/évènements ici, mais l’exercice cible surtout les slots.</p>
+          </TabItem>
+        </TabContainer>
       </section>
-    </main>
+
+      <section id="alerts" class="stack">
+        <h2 class="section-title">Alert (named slots)</h2>
+
+        <Alert type="success">
+          <template #icon>✓</template>
+          <p class="msg">Tout est OK. Slots + style propre.</p>
+          <template #actions>
+            <button class="btn btn--ghost" type="button">Undo</button>
+          </template>
+        </Alert>
+
+        <Alert type="warning">
+          <template #icon>!</template>
+          <p class="msg">Attention : c’est un warning.</p>
+        </Alert>
+      </section>
+
+      <section id="table" class="stack">
+        <h2 class="section-title">DataTable (scoped slots)</h2>
+
+        <DataTable :data="tableData" :columns="['name', 'email', 'status', 'actions']">
+          <template #cell-status="{ value }">
+            <span class="pill" :class="`pill--${value}`">{{ value }}</span>
+          </template>
+
+          <template #cell-actions="{ row }">
+            <button class="btn btn--ghost" type="button" @click="editUser(row)">Edit</button>
+            <button class="btn btn--danger" type="button" @click="deleteUser(row)">Delete</button>
+          </template>
+
+          <template #footer>
+            <tr>
+              <td colspan="4" class="tfoot">
+                <span class="muted">Total lignes : {{ tableData.length }}</span>
+              </td>
+            </tr>
+          </template>
+        </DataTable>
+      </section>
+
+      <section id="modal" class="stack">
+        <h2 class="section-title">Modal</h2>
+
+        <div class="row">
+          <button class="btn btn--primary" type="button" @click="modalOpen = true">
+            Open Modal
+          </button>
+          <span class="muted">Overlay + slots title/footer + close event.</span>
+        </div>
+
+        <Modal :is-open="modalOpen" @close="modalOpen = false">
+          <template #title>
+            <h2>Confirm Action</h2>
+          </template>
+
+          <p>Es-tu sûr de vouloir continuer ?</p>
+
+          <template #footer>
+            <button class="btn btn--ghost" type="button" @click="modalOpen = false">Cancel</button>
+            <button class="btn btn--primary" type="button" @click="confirmAction">Confirm</button>
+          </template>
+        </Modal>
+      </section>
+
+      <template #footer>
+        <div class="footerbar">
+          <span class="muted">Checklist : fallback, named slots, scoped slots, $slots, Teleport ✅</span>
+        </div>
+      </template>
+    </PageLayout>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import TaskItem from './components/TaskItem.vue'
-import AddTask from './components/AddTask.vue'
-import SearchFilter from './components/SearchFilter.vue'
-import StatusFilter from './components/StatusFilter.vue'
+import { ref } from 'vue'
+import BaseCard from './components/BaseCard.vue'
+import Card from './components/Card.vue'
+import UserList from './components/UserList.vue'
+import Modal from './components/Modal.vue'
+import DataTable from './components/DataTable.vue'
+import PageLayout from './components/PageLayout.vue'
+import Alert from './components/Alert.vue'
+import TabContainer from './components/Tabs/TabContainer.vue'
+import TabItem from './components/Tabs/TabItem.vue'
 
-const tasks = ref([
-  {
-    id: 1,
-    title: 'Learn Vue.js Components',
-    description: 'Master component basics',
-    completed: false,
-    createdAt: '2026-01-20'
-  },
-  {
-    id: 2,
-    title: 'Understand Props',
-    description: 'Learn how to pass data to components',
-    completed: true,
-    createdAt: '2026-01-21'
-  }
+const modalOpen = ref(false)
+const activeTab = ref('Overview')
+
+const users = ref([
+  { id: 1, name: 'John Doe', email: 'john@example.com', avatar: 'https://i.pravatar.cc/120?img=1', role: 'Developer' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', avatar: 'https://i.pravatar.cc/120?img=2', role: 'Designer' }
 ])
 
-const searchQuery = ref('')
-const currentFilter = ref('all') // 'all', 'active', 'completed'
+const tableData = ref([
+  { name: 'Alice', email: 'alice@example.com', status: 'active' },
+  { name: 'Bob', email: 'bob@example.com', status: 'inactive' },
+  { name: 'Charlie', email: 'charlie@example.com', status: 'active' }
+])
 
-// Event Handlers
-function addTask(task) {
-  tasks.value.unshift(task)
+function confirmAction() {
+  alert('Action confirmed!')
+  modalOpen.value = false
 }
 
-function toggleComplete(taskId) {
-  const task = tasks.value.find(t => t.id === taskId)
-  if (task) {
-    task.completed = !task.completed
-  }
+function editUser(user) {
+  alert(`Editing: ${user.name}`)
 }
 
-function editTask(taskId) {
-  // Implement edit functionality
-  const task = tasks.value.find(t => t.id === taskId)
-  const newTitle = prompt('Edit task:', task.title)
-  if (newTitle) {
-    task.title = newTitle
-  }
+function deleteUser(user) {
+  alert(`Deleting: ${user.name}`)
 }
-
-function deleteTask(taskId) {
-  tasks.value = tasks.value.filter(t => t.id !== taskId)
-}
-
-function handleFilterChange(filter) {
-  currentFilter.value = filter
-}
-
-// Computed Properties
-const filteredTasks = computed(() => {
-  let result = tasks.value
-
-  // Apply search filter
-  if (searchQuery.value) {
-    result = result.filter(task =>
-        task.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        task.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-    )
-  }
-
-  // Apply status filter
-  if (currentFilter.value === 'active') {
-    result = result.filter(task => !task.completed)
-  } else if (currentFilter.value === 'completed') {
-    result = result.filter(task => task.completed)
-  }
-
-  return result
-})
-
-const activeTasks = computed(() =>
-    tasks.value.filter(t => !t.completed).length
-)
-
-const completedTasks = computed(() =>
-    tasks.value.filter(t => t.completed).length
-)
 </script>
 
 <style scoped>
-:global(:root) {
-  --bg: #0b1220;
-  --surface: rgba(255, 255, 255, 0.06);
-  --surface-strong: rgba(255, 255, 255, 0.09);
-  --text: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.68);
-  --border: rgba(255, 255, 255, 0.12);
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --ring: 0 0 0 4px rgba(66, 184, 131, 0.18);
-  --primary: #42b883; /* Vue green vibe */
-  --primary-2: #2f9f6b;
-  --danger: #ff5a6a;
-  --warning: #ffcc66;
-  --radius: 16px;
+.hero{
+  padding: 28px 0 10px;
+  display:grid;
+  gap: 8px;
 }
-
-:global(body) {
+.hero__title{
   margin: 0;
-  background:
-      radial-gradient(1000px 600px at 20% -10%, rgba(66, 184, 131, 0.25), transparent 60%),
-      radial-gradient(900px 500px at 100% 0%, rgba(120, 87, 255, 0.22), transparent 55%),
-      var(--bg);
-  color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
-  "Segoe UI Emoji";
-}
-
-:global(*),
-:global(*::before),
-:global(*::after) {
-  box-sizing: border-box;
-}
-
-.app {
-  min-height: 100vh;
-}
-
-.app-header {
-  padding: 32px 16px 12px;
-}
-
-.app-header__inner {
-  max-width: 980px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.app-title {
-  margin: 0;
+  font-size: 30px;
   letter-spacing: -0.02em;
-  font-size: 28px;
-  line-height: 1.1;
 }
-
-.app-subtitle {
+.hero__subtitle{
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  max-width: 70ch;
 }
-
-.app-main {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 16px;
-  display: grid;
-  gap: 16px;
-}
-
-.card {
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 16px;
-}
-
-.card--filters {
-  display: grid;
-  gap: 14px;
-}
-
-.filters {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-@media (min-width: 720px) {
-  .filters {
-    grid-template-columns: 1.3fr 1fr;
-    align-items: start;
-  }
-}
-
-.task-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.stat {
-  border: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.12);
-  border-radius: 14px;
-  padding: 12px;
-}
-
-.stat__label {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.stat__value {
-  margin-top: 4px;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.empty-state {
-  border: 1px dashed rgba(255, 255, 255, 0.18);
-  border-radius: var(--radius);
-  padding: 18px;
-  text-align: center;
-  color: var(--muted);
-  background: rgba(0, 0, 0, 0.10);
-}
-
-.empty-state__title {
-  margin: 0 0 6px;
-  color: var(--text);
-  font-size: 16px;
-}
-
-.empty-state__text {
+.hero__hint{
   margin: 0;
+  color: rgba(255,255,255,.58);
   font-size: 13px;
 }
+.section-title{
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.stack{
+  display:grid;
+  gap: 12px;
+  padding: 10px 0;
+}
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+}
+.footerbar{
+  display:flex;
+  justify-content: space-between;
+}
+.muted{ color: var(--muted); }
+
+.nav{
+  display:grid;
+  gap: 8px;
+}
+.nav a{
+  text-decoration:none;
+  color: var(--muted);
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+.nav a:hover{
+  color: var(--text);
+  background: rgba(255,255,255,.05);
+  border-color: var(--border);
+}
+
+.h3{ margin:0; font-size: 14px; }
+
+.row{
+  display:flex;
+  gap: 12px;
+  align-items:center;
+  flex-wrap: wrap;
+}
+
+.btn{
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.08);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.10); }
+.btn:active{ transform: translateY(0); }
+.btn--ghost{ background: transparent; }
+.btn--primary{
+  border-color: rgba(66,184,131,.35);
+  background: linear-gradient(180deg, rgba(66,184,131,.25), rgba(66,184,131,.14));
+}
+.btn--danger{
+  border-color: rgba(255,90,106,.35);
+  background: linear-gradient(180deg, rgba(255,90,106,.22), rgba(255,90,106,.12));
+}
+
+.user-custom{
+  display:flex;
+  gap: 12px;
+  align-items:center;
+}
+.index{ color: var(--muted); width: 26px; text-align:right; }
+.avatar{
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.meta{ display:grid; gap: 2px; flex: 1; }
+.name{ font-weight: 800; }
+.role{ color: var(--muted); font-size: 13px; }
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.06);
+  font-size: 12px;
+}
+.pill--active{
+  border-color: rgba(66,184,131,.35);
+  background: rgba(66,184,131,.16);
+}
+.pill--inactive{
+  border-color: rgba(255,204,102,.35);
+  background: rgba(255,204,102,.14);
+}
+.tfoot{
+  padding: 12px 14px;
+}
+.msg{ margin: 0; }
 </style>
